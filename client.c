@@ -8,36 +8,35 @@
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
-// Simple Round Robin
-char* servers[] = {"127.0.0.1", "127.0.0.1"};
-int current = 0;
-
-char* get_server() {
-    char* s = servers[current];
-    current = (current + 1) % 2;
-    return s;
-}
 
 int main(int argc, char *argv[]) {
 
-    if (argc < 2) {
-        printf("Usage: %s file.cpp\n", argv[0]);
+    if (argc < 3) {
+        printf("Usage: %s <source_file.cpp> <server_ip>\n", argv[0]);
         return 1;
     }
 
     // 🔹 Step 1: Compile locally
     char cmd[200];
     sprintf(cmd, "g++ %s -o executable", argv[1]);
-    system(cmd);
+    int ret = system(cmd);
+    if(ret != 0){
+        printf("Compilation failed\n");
+        return 1;
+    }
 
     printf("Compiled successfully\n");
 
     // 🔹 Step 2: Choose server
-    char* server_ip = get_server();
+    char* server_ip = argv[2];
     printf("Connecting to %s\n", server_ip);
 
     // 🔹 Step 3: Create socket
     int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        perror("Socket creation failed");
+        return 1;
+    }
 
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
@@ -45,10 +44,17 @@ int main(int argc, char *argv[]) {
 
     inet_pton(AF_INET, server_ip, &serv_addr.sin_addr);
 
-    connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("Connection failed");
+        return 1;
+    }
 
     // 🔹 Step 4: Send executable
     FILE *fp = fopen("executable", "rb");
+    if (!fp) {
+        perror("File open failed");
+        return 1;
+    }
     char buffer[BUFFER_SIZE];
 
     int bytes;
