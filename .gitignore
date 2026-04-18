@@ -1,0 +1,14 @@
+# Compiled binaries
+client
+server
+*.out
+*.exe
+
+# Temporary files
+output.txt
+received_exec
+executable
+
+# OS / editor junk
+*.o
+*.log

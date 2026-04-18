@@ -1,0 +1,2 @@
+/usr/bin/ld: cannot use executable file 'received_exec' as input to a link
+collect2: error: ld returned 1 exit status
